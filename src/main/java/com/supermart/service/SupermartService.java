@@ -39,6 +39,7 @@ public class SupermartService {
 			
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -70,23 +71,123 @@ public class SupermartService {
 		//return userExist;
 	}
 	
+	
+	
+	
+	public static int addPurchaseToStock(Purchase purchase) throws SQLException, ClassNotFoundException {
+		String query = "SELECT * FROM stock WHERE product_id=?";
+		Stock stock = null;
+		int updateResult = 0;
+		int quantity_available, quantity_bought, total_quantity;
+		ResultSet resultSet = null;
+		try {
+			Connection connection = DbConnection.connectDB();
+			PreparedStatement statement = connection.prepareStatement(query);
+			statement.setInt(1, purchase.getProduct_id());
+			resultSet = statement.executeQuery();
+			
+			if(resultSet.next()) {
+				stock = new Stock();
+				quantity_available = resultSet.getInt("quantity_available");
+				quantity_bought = purchase.getQuantity_bought();
+				total_quantity = quantity_available + quantity_bought;
+				stock.setStock_id(resultSet.getInt("stock_id"));
+				stock.setProduct_id(resultSet.getInt("product_id"));
+				stock.setQuantity_available(total_quantity);
+				stock.setSelling_price(resultSet.getDouble("selling_price"));
+				
+				if(quantity_available==0 || quantity_bought==0 || total_quantity==0) {
+					System.out.println("Unable to increment stock");
+					System.exit(0);
+				}else {
+					try {
+						String query1 = "UPDATE stock SET quantity_available=? WHERE product_id=?;";
+						statement = connection.prepareStatement(query1);
+						statement.setInt(1, stock.getQuantity_available());
+						statement.setInt(2, purchase.getProduct_id());
+						updateResult = statement.executeUpdate();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			}else {
+				//add a new stock
+			}
+		}catch(Exception e){
+			System.out.println(e);
+			System.exit(0);
+		}
+		return updateResult;
+	}
+	
+	public static int deductSaleFromStock(Sales sales) throws SQLException, ClassNotFoundException {
+		String query = "SELECT * FROM stock WHERE product_id=?";
+		Stock stock = null;
+		int updateResult = 0;
+		int quantity_available, quantity_sold, total_quantity;
+		ResultSet resultSet = null;
+		try {
+			Connection connection = DbConnection.connectDB();
+			PreparedStatement statement = connection.prepareStatement(query);
+			statement.setInt(1, sales.getProduct_id());
+			resultSet = statement.executeQuery();
+			
+			if(resultSet.next()) {
+				stock = new Stock();
+				quantity_available = resultSet.getInt("quantity_available");
+				quantity_sold = sales.getQuantity_sold();
+				total_quantity = quantity_available - quantity_sold;
+				stock.setStock_id(resultSet.getInt("stock_id"));
+				stock.setProduct_id(resultSet.getInt("product_id"));
+				stock.setQuantity_available(total_quantity);
+				stock.setSelling_price(resultSet.getDouble("selling_price"));
+				
+				if(quantity_available==0 || quantity_sold==0 || total_quantity==0) {
+					System.out.println("Unable to decrement stock");
+					System.exit(0);
+				}else if(total_quantity<0) {
+					System.out.println("Insufficient stock to perform a sale");
+				}else {
+					try {
+						String query1 = "UPDATE stock SET quantity_available=? WHERE product_id=?;";
+						statement = connection.prepareStatement(query1);
+						statement.setInt(1, stock.getQuantity_available());
+						statement.setInt(2, sales.getProduct_id());
+						updateResult = statement.executeUpdate();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			}
+		}catch(Exception e){
+			System.out.println(e);
+			System.exit(0);
+		}
+		return updateResult;
+	}
+	
+	
 	public static int insertPurchase(Purchase purchase) throws ClassNotFoundException {
-		String query = "INSERT INTO purchase (product_name,buying_price,supplier_id,quantity_bought) VALUES (?, ?, ?, ?);";
+		String query = "INSERT INTO purchase (product_id,product_name,buying_price,supplier_id,quantity_bought) VALUES (?, ?, ?, ?, ?);";
 		int insertResult = 0;
 		
 		try{
 			Connection con = DbConnection.connectDB();
 	
 			PreparedStatement statement = con.prepareStatement(query);
-			statement.setString(1, purchase.getProduct_name());
-			statement.setDouble(2, purchase.getBuying_price());
-			statement.setInt(3, purchase.getSupplier_id());
-			statement.setInt(4, purchase.getQuantity_bought());
+			statement.setInt(1, purchase.getProduct_id());
+			statement.setString(2, purchase.getProduct_name());
+			statement.setDouble(3, purchase.getBuying_price());
+			statement.setInt(4, purchase.getSupplier_id());
+			statement.setInt(5, purchase.getQuantity_bought());
 			
-			insertResult = statement.executeUpdate();		
+			addPurchaseToStock(purchase);
+			insertResult = statement.executeUpdate();
+			
 			System.out.println("A new purchase added");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -108,6 +209,7 @@ public class SupermartService {
 			System.out.println("A new sale added");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -128,6 +230,7 @@ public class SupermartService {
 			System.out.println("A new stock added");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -147,6 +250,7 @@ public class SupermartService {
 			System.out.println("A new supplier added");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -167,9 +271,10 @@ public class SupermartService {
 			statement.setInt(5, purchase.getProduct_id());
 			
 			insertResult = statement.executeUpdate();		
-			
+			System.out.println("Record updated");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -189,9 +294,10 @@ public class SupermartService {
 			statement.setInt(5, sales.getOrder_id());
 			
 			insertResult = statement.executeUpdate();		
-			
+			System.out.println("Record updated");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -210,9 +316,10 @@ public class SupermartService {
 			statement.setInt(4, stock.getStock_id());
 			
 			insertResult = statement.executeUpdate();		
-			
+			System.out.println("Record updated");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -230,9 +337,10 @@ public class SupermartService {
 			statement.setInt(3, supplier.getSupplier_id());
 			
 			insertResult = statement.executeUpdate();		
-			
+			System.out.println("Record updated");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -395,6 +503,18 @@ public class SupermartService {
 		return supplier;
 	}
 	
+	
+	
+	/*
+	 * public void view() { try { String a = getPurchase(1).getProduct_name(); int b
+	 * = getSale(1).getOrder_id();
+	 * 
+	 * System.out.println(a + b); } catch (SQLException e) { // TODO Auto-generated
+	 * catch block e.printStackTrace(); } }
+	 */
+	
+	
+	
 	public Sales getSale(int saleId) throws SQLException {
 		String query = "SELECT * FROM sales WHERE order_id="+saleId;
 		Sales sale = null;
@@ -471,33 +591,37 @@ public class SupermartService {
 	
 	
 	public static int deletePurchase(int product_id) throws ClassNotFoundException {
-		String query = "DELETE FROM purchase WHERE product_id="+product_id+";";
+		String query = "DELETE FROM purchase WHERE product_id=?";
 		int insertResult = 0;
 		
 		try{
 			Connection con = DbConnection.connectDB();
 			PreparedStatement statement = con.prepareStatement(query);
+			statement.setInt(1, product_id);
 			insertResult = statement.executeUpdate();		
 			
 			System.out.println("Record deleted!");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
 	
 	public static int deleteSale(int order_id) throws ClassNotFoundException {
-		String query = "DELETE FROM sales WHERE order_id="+order_id+";";
+		String query = "DELETE FROM sales WHERE order_id=?";
 		int insertResult = 0;
 		
 		try{
 			Connection con = DbConnection.connectDB();
 			PreparedStatement statement = con.prepareStatement(query);
+			
 			insertResult = statement.executeUpdate();		
 			
 			System.out.println("Record deleted!");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -514,6 +638,7 @@ public class SupermartService {
 			System.out.println("Record deleted!");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}
@@ -530,6 +655,7 @@ public class SupermartService {
 			System.out.println("Record deleted!");
 		}catch(Exception e){
 			System.out.println(e);
+			System.exit(0);
 		}
 		return insertResult;
 	}

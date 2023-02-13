@@ -21,9 +21,11 @@ public class Cli {
 	    	input = (kb.nextLine()).toLowerCase();
 	    	//kb.close();
 	    	if(input.equals("y")) {
+	    		System.out.println("");
 	    		login();
 	    		break;
 	    	}else if(input.equals("n")) {
+	    		System.out.println("");
 	    		register();
 	    		break;
 	    	}else {
@@ -99,14 +101,16 @@ public class Cli {
 				
 				String entry;
 				while(true) {
+					System.out.println("");
 					System.out.println("Enter 'ap' to add a purchase, 'as' to add a sale, 'ao' to add stock, 'au' to add a supplier,\n"
 							+ "'up' to update a purchase, 'us' to update a sale, 'uo' to update stock, 'uu' to update a supplier,\n"
 							+ "'gp' to get all purchase, 'gs' to get all sales, 'go' to get all stock, 'gu' to get all suppliers,\n"
-							+ "'dp' to delete a purchase, 'us' to delete a sale, 'uo' to delete stock, 'uu' to delete a supplier.\n"
+							+ "'dp' to delete a purchase, 'ds' to delete a sale, 'do' to delete stock, 'du' to delete a supplier.\n"
 							+ "Enter 'q' to quit");
 					System.out.println("");
 					System.out.println("Enter your selection: ");
 					entry = (kb.nextLine()).toLowerCase();
+					System.out.println("");
 					if(entry.equals("ap")) {
 						addPurchase();
 						//break;
@@ -179,6 +183,7 @@ public class Cli {
     	
     	try {
 			SupermartService.deleteSupplier(supplier_id);
+			System.out.println("Record deleted");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -192,7 +197,8 @@ public class Cli {
     	//kb.close();
     	
     	try {
-			SupermartService.deleteSupplier(stock_id);
+			SupermartService.deleteStock(stock_id);
+			System.out.println("Record deleted");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -206,21 +212,24 @@ public class Cli {
     	//kb.close();
     	
     	try {
-			SupermartService.deleteSupplier(order_id);
+			SupermartService.deleteSale(order_id);
+			System.out.println("Record deleted");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void deletePurchase() {
+		int product_id;
 		System.out.println("Delete a purchase");
     	Scanner kb = new Scanner(System.in);
     	System.out.println("Enter product_id: ");
-    	int product_id = Integer.parseInt(kb.nextLine());
+    	product_id = Integer.parseInt(kb.nextLine());
     	//kb.close();
     	
     	try {
-			SupermartService.deleteSupplier(product_id);
+			SupermartService.deletePurchase(product_id);
+			System.out.println("Record deleted");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -382,11 +391,14 @@ public class Cli {
 	public static void addPurchase(){
 		String product_name;
 		double buying_price = 0;
-		int supplier_id,quantity_bought = 0;
+		int product_id,supplier_id,quantity_bought = 0;
 		Purchase purchase = new Purchase();
 		
     	System.out.println("Add a new purchase");
     	Scanner kb = new Scanner(System.in);
+    	System.out.println("Enter product_id: ");
+    	product_id = Integer.parseInt(kb.nextLine());
+    	
     	System.out.println("Enter product_name: ");
     	product_name = kb.nextLine();
         
@@ -401,16 +413,18 @@ public class Cli {
         //kb.close();
         System.out.println("");
         
-        if(product_name.isEmpty() || buying_price==0 || supplier_id==0 || quantity_bought==0) {
+        if(product_id==0 || product_name.isEmpty() || buying_price==0 || supplier_id==0 || quantity_bought==0) {
         	System.out.println("Fields cannot be empty");
         	exitSystem();
         }else {
+        	purchase.setProduct_id(product_id);
         	purchase.setProduct_name(product_name);
         	purchase.setBuying_price(buying_price);
         	purchase.setSupplier_id(supplier_id);
         	purchase.setQuantity_bought(quantity_bought);
         	try {
 				SupermartService.insertPurchase(purchase);
+        		//SupermartService.insertTrial(purchase.getQuantity_bought());
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}

@@ -20,16 +20,17 @@ public class SupermartController extends HttpServlet {
 		
 		public SupermartController()
 		{
-			super();
 		}
 		
 		protected void doSetPurchase(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+			int product_id = Integer.parseInt(request.getParameter("product_id"));
 			String product_name = request.getParameter("product_name");
 			double buying_price = Double.parseDouble(request.getParameter("buying_price"));
 			int supplier_id = Integer.parseInt(request.getParameter("supplier_id"));
 			int quantity_bought = Integer.parseInt(request.getParameter("quantity_bought"));
 			
 			Purchase purchase = new  Purchase();
+			purchase.setProduct_id(product_id);
 			purchase.setProduct_name(product_name);
 			purchase.setBuying_price(buying_price);
 			purchase.setSupplier_id(supplier_id);
